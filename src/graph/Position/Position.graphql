@@ -1,0 +1,19 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.0")
+
+type Position {
+    x: Float
+    y: Float
+    z: Float
+}
+
+input PositionInput {
+    x: Float
+    y: Float
+}
+
+
+input ChunkInput {
+    x: Int!
+    y: Int!
+}

@@ -8,10 +8,8 @@ const { typeDefs, resolvers } = require('./src/graph/index');
 const { returnRedisConnection } = require('./src/db/redis/redis');
 
 // datasources
-const SQLds = require('./src/datasources/sql');
 const RedisDs = require('./src/datasources/redis');
 
-const db = new SQLds(knexConfig);
 const redis = new RedisDs(returnRedisConnection());
 
 const server = new ApolloServer({
@@ -23,8 +21,6 @@ const server = new ApolloServer({
         }
     },
 });
-
-deploy(knex);
 
 server.listen({
     port: process.env.PORT

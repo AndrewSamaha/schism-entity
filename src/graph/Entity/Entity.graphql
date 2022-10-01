@@ -1,0 +1,29 @@
+type Entity {
+    id: ID
+    name: String
+    longName: String
+    speed: Float
+    ownerId: String
+    position: Position
+    color: String
+}
+
+input EntityInput {
+    id: ID!
+    name: String
+    longName: String
+    speed: Float
+    ownerId: String
+    position: PositionInput
+    color: String
+}
+
+type Mutation {
+    updateEntity(entity: EntityInput!): Boolean
+}
+
+type Query {
+    getEntityById(id: ID!): Entity
+    getEntitiesInChunk(chunk: ChunkInput!): [Entity]!
+    getEntitiesByOwner(ownerId: ID!): [Entity]!
+}
