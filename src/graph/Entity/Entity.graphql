@@ -20,10 +20,11 @@ input EntityInput {
 
 type Mutation {
     updateEntity(entity: EntityInput!): Boolean
+    insertEntity(entity: EntityInput!): Boolean
 }
 
 type Query {
-    getEntityById(id: ID!): Entity
+    getEntityById(id: ID!): [Entity]!
     getEntitiesInChunk(chunk: ChunkInput!): [Entity]!
     getEntitiesByOwner(ownerId: ID!): [Entity]!
 }

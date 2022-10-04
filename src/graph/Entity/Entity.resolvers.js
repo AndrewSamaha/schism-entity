@@ -37,7 +37,10 @@ module.exports = {
         getEntityById: async (_, args, { dataSources }) => {
             const { id } = args;
             const { redis } = dataSources;
-            return redis.getEntityById(id);
+            //const entity = await redis.getEntityByIdJson(id);
+            const entity = await redis.getEntityByIdFtSearch(id);
+            console.log('getEntityById resolver received: ', entity)
+            return entity;
         },
         getEntitiesInChunk: async (_, args, { dataSources }) => {
             const { chunk } = args;
@@ -53,10 +56,17 @@ module.exports = {
         updateEntity: async (_, args, { dataSources }) => {
             const { redis } = dataSources;
             const { entity } = args;
-            const { id } = entity;
             console.log('updateEntity received', entity);
-            const result = await redis.setEntity(entity);
+            const result = await redis.updateEntityJson(entity);
             console.log('updateEntity', result);
+            return true;
+        },
+        insertEntity: async (_, args, { dataSources }) => {
+            const { redis } = dataSources;
+            const { entity } = args;
+            console.log('insertEntity received', entity);
+            const result = await redis.insertEntityJson(entity);
+            console.log('insertEntity', result);
             return true;
         }
     }
