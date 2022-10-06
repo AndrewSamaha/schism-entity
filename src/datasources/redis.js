@@ -145,9 +145,10 @@ class RedisDs extends RESTDataSource {
         console.log('promises',promises)
         const results = await promises.exec();
         console.log('upsertEntities results=', results)
+
         //await client.json.set(documentName, '$', entity);
 
-        return true;
+        return results.map((result) => result === 'OK');
     }
 
 
