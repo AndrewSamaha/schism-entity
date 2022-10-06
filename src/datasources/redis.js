@@ -41,7 +41,6 @@ class RedisDs extends RESTDataSource {
     constructor(client) {
         super();
         this.client = client;
-        this.createEntityPath();
         this.createEntityIndex();
     }
 
@@ -56,7 +55,7 @@ class RedisDs extends RESTDataSource {
         let indexExists = null;
         try {
             indexExists = await client.ft.info(ENTITY_INDEX);
-            console.log('createEntityIndex indexExists:',indexExists)    
+            console.log('createEntityIndex indexExists:',ENTITY_INDEX);
         } catch (e) {
             console.log('createEntityIndex exception', e, ENTITY_INDEX);
         }
@@ -97,14 +96,6 @@ class RedisDs extends RESTDataSource {
         
     }
 
-    async createEntityPath() {
-        const client = await this.client;
-        console.log('Redis DataSource: creating entity path')
-        const indexZero = await client.json.get(JSON_DOC_NAME, '$')
-        if (!indexZero) {
-            await client.json.set(JSON_DOC_NAME,`$`, []);
-        }
-    }
     async getJWTSecret() {
         const client = await this.client;
         const secret = client.get(PLAYER_JWT_SECRET_KEY);
@@ -141,6 +132,24 @@ class RedisDs extends RESTDataSource {
 
         return true;
     }
+
+    async upsertEntities(entities) {
+        const client = await this.client;
+
+        const promises = entities.reduce((accumulator, entity) => {
+            const { id } = entity;
+            const documentName = `entity:${id}`;
+            return accumulator.json.set(documentName, '$', entity);
+        }, client.multi())
+
+        console.log('promises',promises)
+        const results = await promises.exec();
+        console.log('upsertEntities results=', results)
+        //await client.json.set(documentName, '$', entity);
+
+        return true;
+    }
+
 
     async insertEntityJson(entity) {
         return await this.updateEntityJson(entity);

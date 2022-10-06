@@ -80,6 +80,11 @@ module.exports = {
             const result = await redis.insertEntityJson(entity);
             console.log('insertEntity', result);
             return true;
+        },
+        upsertEntities: async (_, args, { dataSources }) => {
+            const { redis } = dataSources;
+            const { entities } = args;
+            return await redis.upsertEntities(entities);
         }
     }
 }

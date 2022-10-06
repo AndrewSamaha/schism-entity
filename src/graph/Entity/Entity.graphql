@@ -21,6 +21,7 @@ input EntityInput {
 type Mutation {
     updateEntity(entity: EntityInput!): Boolean
     insertEntity(entity: EntityInput!): Boolean
+    upsertEntities(entities: [EntityInput]!): Boolean
 }
 
 type Query {
