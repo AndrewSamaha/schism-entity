@@ -50,7 +50,7 @@ class RedisDs extends RESTDataSource {
         FT.CREATE myIdx on JSON PREFIX 1 entity: SCHEMA 
         $.position.y AS y NUMERIC 
         $.position.x AS x NUMERIC
-        $.name AS name TEXT
+        $.name AS name TEXT  
         */
         const client = await this.client;
         let indexExists = null;
@@ -64,19 +64,32 @@ class RedisDs extends RESTDataSource {
         
         try {
             const createResult = await client.ft.create(ENTITY_INDEX, {
-                id: {
+                '$.id': {
                     type: SchemaFieldTypes.TEXT,
-                    sortable: true
+                    //sortable: true,
+                    AS: 'id'
                 },
-                "position.x": SchemaFieldTypes.NUMERIC,
-                "position.y": SchemaFieldTypes.NUMERIC,
-                name: SchemaFieldTypes.TEXT,
-                ownerId: SchemaFieldTypes.TEXT
+                '$.position.x': {
+                    type: SchemaFieldTypes.NUMERIC,
+                    AS: 'x'
+                },
+                '$.position.y': {
+                    type: SchemaFieldTypes.NUMERIC,
+                    AS: 'y'
+                },
+                '$.name': {
+                    type: SchemaFieldTypes.TEXT,
+                    AS: 'name'
+                },
+                '$.ownerId': {
+                    type: SchemaFieldTypes.TEXT,
+                    AS: 'ownerId'
+                }
             }, {
                 ON: 'JSON',
                 PREFIX: JSON_DOC_PREFIX  
             });
-            console.log('createEntityIndex createResults', createResult);
+            console.log('createEntityIndex already exists');
         } catch (e) {
             console.log('createEntityIndex exception:', e)
         }
@@ -131,7 +144,6 @@ class RedisDs extends RESTDataSource {
 
     async insertEntityJson(entity) {
         return await this.updateEntityJson(entity);
-        return true;
     }
 
     async getEntityByIdFtSearch(id) {
@@ -140,10 +152,58 @@ class RedisDs extends RESTDataSource {
             ENTITY_INDEX,
             `@id:${id}`
         ); 
-        if (!results) return {};
+        if (!results) return [];
         console.log('ft.search results', results)
         const { documents } = results;
         console.log('documents',documents)
+        const entities = documents.map((document) => {
+            const { id: documentId, value: entity } = document;
+            return entity;
+        });
+        return entities;
+    }
+
+    async getEntityByOwnerId(ownerId) {
+        const client = await this.client;
+        const results = await client.ft.search(
+            ENTITY_INDEX,
+            `@ownerId:${ownerId}`
+        ); 
+        if (!results) return [];
+        const { documents } = results;
+        const entities = documents.map((document) => {
+            const { id: documentId, value: entity } = document;
+            return entity;
+        });
+        return entities;
+    }
+
+    async getEntityNearPosition(position, range) {
+        if (!position?.x || !position?.y) 
+            return [];
+    
+        const client = await this.client;
+        const results = await client.ft.search(
+            ENTITY_INDEX,
+            `@x:[${position.x - range} ${position.x + range}] @y:[${position.y - range} ${position.y + range}]`
+        ); 
+        if (!results) return [];
+        const { documents } = results;
+        const entities = documents.map((document) => {
+            const { id: documentId, value: entity } = document;
+            return entity;
+        });
+        return entities;
+    }
+
+    async getAllEntities() {
+        const client = await this.client;
+        const results = await client.ft.search(
+            ENTITY_INDEX,
+            `*`
+        ); 
+        if (!results) return [];
+        const { documents } = results;
         const entities = documents.map((document) => {
             const { id: documentId, value: entity } = document;
             return entity;

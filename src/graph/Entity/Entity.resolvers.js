@@ -37,7 +37,6 @@ module.exports = {
         getEntityById: async (_, args, { dataSources }) => {
             const { id } = args;
             const { redis } = dataSources;
-            //const entity = await redis.getEntityByIdJson(id);
             const entity = await redis.getEntityByIdFtSearch(id);
             console.log('getEntityById resolver received: ', entity)
             return entity;
@@ -49,7 +48,20 @@ module.exports = {
         },
         getEntitiesByOwner: async (_, args, { dataSources }) => {
             const { ownerId } = args;
-            return times(5, () => makeEntity({ args, ownerId }));
+            const { redis } = dataSources;
+            const entities = await redis.getEntityByOwnerId(ownerId);
+            return entities;
+        },
+        getEntitiesNearPosition: async (_, args, { dataSources }) => {
+            const { position, range } = args;
+            const { redis } = dataSources;
+            const entities = await redis.getEntityNearPosition(position, range);
+            return entities;
+        },
+        getAllEntities: async (_, __, { dataSources }) => {
+            const { redis } = dataSources;
+            const entities = await redis.getAllEntities();
+            return entities;
         }
     },
     Mutation: {

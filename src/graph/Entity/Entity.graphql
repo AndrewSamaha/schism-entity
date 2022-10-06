@@ -27,4 +27,6 @@ type Query {
     getEntityById(id: ID!): [Entity]!
     getEntitiesInChunk(chunk: ChunkInput!): [Entity]!
     getEntitiesByOwner(ownerId: ID!): [Entity]!
+    getEntitiesNearPosition(position: PositionInput!, range: Int): [Entity]!
+    getAllEntities: [Entity]!
 }
