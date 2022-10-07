@@ -30,4 +30,5 @@ type Query {
     getEntitiesByOwner(ownerId: ID!): [Entity]!
     getEntitiesNearPosition(position: PositionInput!, range: Int): [Entity]!
     getAllEntities: [Entity]!
+    getMyEntities: [Entity]!
 }

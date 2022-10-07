@@ -179,6 +179,7 @@ class RedisDs extends RESTDataSource {
             ENTITY_INDEX,
             `@ownerId:${ownerId}`
         ); 
+        console.log('getEntityByOwnerId ownerId', ownerId, 'results', results)
         if (!results) return [];
         const { documents } = results;
         const entities = documents.map((document) => {

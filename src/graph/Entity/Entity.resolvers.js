@@ -62,6 +62,14 @@ module.exports = {
             const { redis } = dataSources;
             const entities = await redis.getAllEntities();
             return entities;
+        },
+        getMyEntities: async (_, args, { dataSources, player }) => {
+            console.log('current player: ', player);
+            if (!player?.id) return [];
+            const { id } = player;
+            const { redis } = dataSources;
+            const entities = await redis.getEntityByOwnerId(`player.${id}`);
+            return entities;
         }
     },
     Mutation: {
