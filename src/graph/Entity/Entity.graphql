@@ -31,4 +31,5 @@ type Query {
     getEntitiesNearPosition(position: PositionInput!, range: Int): [Entity]!
     getAllEntities: [Entity]!
     getMyEntities: [Entity]!
+    getEntitiesICanSee: [Entity]!
 }

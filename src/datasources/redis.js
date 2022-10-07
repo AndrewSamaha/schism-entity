@@ -207,6 +207,20 @@ class RedisDs extends RESTDataSource {
         return entities;
     }
 
+    async getEntitiesNearEntities(entities, ignoreId = null, defaultRange = 4) {
+        if (!entities || !entities.length) return [];
+        const promises = entities.reduce((accumulator, entity) => {
+            const { position: { x, y }, sightRange } = entity;
+            const range = sightRange ? sightRange : defaultRange;
+            return accumulator.ft.search(ENTITY_INDEX,
+                `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ownerId}`)
+        
+        }, client.multi())
+        const results = await promises.exec();
+        console.log('getEntitiesNearEntities', results)
+        return [];
+    }
+
     async getAllEntities() {
         const client = await this.client;
         const results = await client.ft.search(
@@ -221,6 +235,28 @@ class RedisDs extends RESTDataSource {
         });
         return entities;
     }
+
+    // async getEntitiesICanSee(myId) {
+    //     const myEntities = await getEntitiesByOwnerId(myId);
+
+    //     const result = {
+    //         myEntities,
+    //         otherEntities: myEntities
+
+    //     }
+    //     const client = await this.client;
+    //     const results = await client.ft.search(
+    //         ENTITY_INDEX,
+    //         `*`
+    //     ); 
+    //     if (!results) return [];
+    //     const { documents } = results;
+    //     const entities = documents.map((document) => {
+    //         const { id: documentId, value: entity } = document;
+    //         return entity;
+    //     });
+    //     return entities;
+    // }
 }
 
 module.exports = RedisDs;

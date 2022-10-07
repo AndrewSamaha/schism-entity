@@ -64,12 +64,39 @@ module.exports = {
             return entities;
         },
         getMyEntities: async (_, args, { dataSources, player }) => {
-            console.log('current player: ', player);
             if (!player?.id) return [];
             const { id } = player;
             const { redis } = dataSources;
             const entities = await redis.getEntityByOwnerId(`player.${id}`);
             return entities;
+        },
+        getEntitiesICanSee: async(_, __, { dataSources, player }) => {
+            console.log('getEntitiesICanSee player',player)
+            if (!player?.id) return {
+                myEntities: [],
+                otherEntities: []
+            };
+            const { redis } = dataSources;
+            console.log('getEntitiesICanSee');
+            const myEntities = await redis.getEntityByOwnerId(`player.${player.id}`);
+            console.log('myEntities', myEntities);
+            const otherEntities = await redis.getEntitiesNearEntities({ 
+                entities: myEntities,
+                ignoreId: player.id
+            });
+            console.log('otherEntities', otherEntities)
+            const uniqueEntities = otherEntities.reduce((uniqueData, entity) => {
+                const { entities, entityIds } = uniqueData;
+                if (entities.includes(entity.id)) return uniqueData;
+                entities.push(entity);
+                entityIds.push(entity.id);
+                return { entities, entityIds};
+            }, {
+                entities: myEntities,
+                entityIds: myEntities.map(entity => entity.id)
+            })
+            console.log('uniqueEntities', uniqueEntities.entities)
+            return uniqueEntities.entities;
         }
     },
     Mutation: {
