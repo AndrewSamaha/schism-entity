@@ -1,5 +1,7 @@
 const { RESTDataSource } = require("apollo-datasource-rest");
 const { SchemaFieldTypes } = require("redis");
+const uniqBy = require('lodash/uniqBy');
+const union = require('lodash/union');
 const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
 
 // https://github.com/redis/node-redis/tree/2a8e11a51d4f965b2d902bd8e6b041f04d984182/packages/json
@@ -207,18 +209,33 @@ class RedisDs extends RESTDataSource {
         return entities;
     }
 
-    async getEntitiesNearEntities(entities, ignoreId = null, defaultRange = 4) {
-        if (!entities || !entities.length) return [];
+    async getEntitiesNearEntities({entities, ignoreId = null, defaultRange = 4}) {
+        //console.log('getEntitiesNearEntities startingup entities=', entities)
+        if (!entities?.length) return [];
+        const client = await this.client;
         const promises = entities.reduce((accumulator, entity) => {
             const { position: { x, y }, sightRange } = entity;
             const range = sightRange ? sightRange : defaultRange;
             return accumulator.ft.search(ENTITY_INDEX,
-                `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ownerId}`)
+                `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ignoreId}`)
         
         }, client.multi())
+        // console.log('  executing promises')
         const results = await promises.exec();
-        console.log('getEntitiesNearEntities', results)
-        return [];
+        //console.log('getEntitiesNearEntities', results)
+        const reducedResults = results.reduce((accumulator, result) => {
+            const foundEntities = result.documents.map(doc => doc.value);
+            // console.log("   accumulator=", accumulator)
+            //console.log("      result.documents=", foundEntities)
+            
+            //return accumulator = [...accumulator, ...foundEntities];
+
+            //return union(accumulator, foundEntities);
+            return uniqBy(accumulator.concat(foundEntities), 'id')
+        },[] );
+        
+        const uniqueResults = uniqBy(reducedResults, 'id');
+        return uniqueResults
     }
 
     async getAllEntities() {

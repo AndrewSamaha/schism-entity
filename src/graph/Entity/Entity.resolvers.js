@@ -71,15 +71,15 @@ module.exports = {
             return entities;
         },
         getEntitiesICanSee: async(_, __, { dataSources, player }) => {
-            console.log('getEntitiesICanSee player',player)
+            //console.log('getEntitiesICanSee player',player)
             if (!player?.id) return {
                 myEntities: [],
                 otherEntities: []
             };
             const { redis } = dataSources;
-            console.log('getEntitiesICanSee');
+            //console.log('getEntitiesICanSee');
             const myEntities = await redis.getEntityByOwnerId(`player.${player.id}`);
-            console.log('myEntities', myEntities);
+            //console.log('myEntities', myEntities);
             const otherEntities = await redis.getEntitiesNearEntities({ 
                 entities: myEntities,
                 ignoreId: player.id
@@ -95,7 +95,7 @@ module.exports = {
                 entities: myEntities,
                 entityIds: myEntities.map(entity => entity.id)
             })
-            console.log('uniqueEntities', uniqueEntities.entities)
+            //console.log('uniqueEntities', uniqueEntities.entities)
             return uniqueEntities.entities;
         }
     },
@@ -116,10 +116,12 @@ module.exports = {
             console.log('insertEntity', result);
             return true;
         },
-        upsertEntities: async (_, args, { dataSources }) => {
+        upsertMyEntities: async (_, args, { dataSources, player }) => {
+            if (!player?.id) return false;
             const { redis } = dataSources;
             const { entities } = args;
-            return await redis.upsertEntities(entities);
+            const myEntities = entities.filter((entity) => entity.ownerId === `player.${player.id}`)
+            return await redis.upsertEntities(myEntities);
         }
     }
 }
