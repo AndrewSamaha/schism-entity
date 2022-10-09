@@ -72,10 +72,7 @@ module.exports = {
         },
         getEntitiesICanSee: async(_, __, { dataSources, player }) => {
             //console.log('getEntitiesICanSee player',player)
-            if (!player?.id) return {
-                myEntities: [],
-                otherEntities: []
-            };
+            if (!player?.id) return [];
             const { redis } = dataSources;
             //console.log('getEntitiesICanSee');
             const myEntities = await redis.getEntityByOwnerId(`player.${player.id}`);
@@ -84,7 +81,7 @@ module.exports = {
                 entities: myEntities,
                 ignoreId: player.id
             });
-            console.log('otherEntities', otherEntities)
+            //console.log('otherEntities', otherEntities)
             const uniqueEntities = otherEntities.reduce((uniqueData, entity) => {
                 const { entities, entityIds } = uniqueData;
                 if (entities.includes(entity.id)) return uniqueData;
