@@ -1,40 +1,7 @@
 const { RESTDataSource } = require("apollo-datasource-rest");
 const { SchemaFieldTypes } = require("redis");
 const uniqBy = require('lodash/uniqBy');
-const union = require('lodash/union');
 const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
-
-// https://github.com/redis/node-redis/tree/2a8e11a51d4f965b2d902bd8e6b041f04d984182/packages/json
-// https://github.com/redis/node-redis/tree/2a8e11a51d4f965b2d902bd8e6b041f04d984182/packages/search
-// Create an index
-//      FT.CREATE myIdxy on JSON SCHEMA $.entities.*.position.y AS y NUMERIC $.entities.*.position.x as X NUMERIC
-//      FT.CREATE myIdx on JSON SCHEMA $.entities.*.position.y AS y NUMERIC $.entities.*.position.x AS x NUMERIC
-//      FT.DROPINDEX myIdx
-/*
-        JSON.SET noderedis:jsondata $ '{"entities":{"entityA":{"id":"entityA","name":"EntityAlpha","longName":"This is entity alpha","speed":9.66,"ownerId":"god","position":{"x":15,"y":15},"color":"red"},"entityB":{"id":"entityB","name":"EntityBeta","longName":"This is entity beta","speed":9.66,"ownerId":"god","position":{"x":20,"y":20},"color":"red"},"entityC":{"id":"entityC","name":"EntityCeta","longName":"This is entity ceta","speed":9.66,"ownerId":"god","position":{"x":15,"y":25},"color":"fire"}}}'
-
-        FT.CREATE myIdx on JSON PREFIX 1 entity: SCHEMA $.position.y AS y NUMERIC $.position.x AS x NUMERIC $.name AS name TEXT
-        JSON.SET entity:1 $ '{"id":"entityA","name":"EntityAlpha","longName":"This is entity alpha","speed":9.66,"ownerId":"god","position":{"x":15,"y":15},"color":"red"}'
-        JSON.SET entity:2 $ '{"id":"entityB","name":"EntityBeta","longName":"This is entity beta","speed":9.66,"ownerId":"god","position":{"x":20,"y":20},"color":"red"}'
-        JSON.SET entity:3 $ '{"id":"entityC","name":"EntityCeta","longName":"This is entity ceta","speed":9.66,"ownerId":"god","position":{"x":15,"y":25},"color":"fire"}'
-
-        This pattern works, but who knows how slow it is compared to using indexes
-        > JSON.SET myDoc $ '{"books": [{"title": "Peter Pan", "price": 8.95}, {"title": "Moby Dick", "price": 12.99}]}'
-        OK
-        > JSON.GET myDoc '$.books[?(@.price < 10)]'
-        [{"title":"Peter Pan","price":8.95}]
-        > JSON.GET myDoc '$.books[?(@.price > 10 && @.price < 20)]'
-        [{"title":"Moby Dick","price":12.99}]
-        > JSON.SET myDoc '$.books[?(@.price > 10 && @.price < 20)]' '{"title":"Candyland","price":30.13}'
-        OK
-        > JSON.GET myDoc
-        {"books":[{"title":"Peter Pan","price":8.95},{"title":"Candyland","price":30.13}]}
-JSON.SET myDoc $ '[{"title": "Peter Pan", "price": 8.95, "position": {"x": 10, "y": 10}}, {"title": "Moby Dick", "price": 12.99,"position": {"x": 10, "y": 20}}]'
-
-*/
-
-// const JSON_DOC_NAME = 'noderedis:jsondata';
-const JSON_DOC_NAME = 'flatEntitiesArray';
 const ENTITY_INDEX = 'entityIdx';
 const JSON_DOC_PREFIX = 'entity:';
 
@@ -49,8 +16,8 @@ class RedisDs extends RESTDataSource {
     async createEntityIndex() {
         /*
         FT.CREATE myIdx on JSON PREFIX 1 entity: SCHEMA 
-        $.position.y AS y NUMERIC 
-        $.position.x AS x NUMERIC
+        $.position[0] AS x NUMERIC 
+        $.position[1] AS y NUMERIC
         $.name AS name TEXT  
         */
         const client = await this.client;
@@ -67,14 +34,13 @@ class RedisDs extends RESTDataSource {
             const createResult = await client.ft.create(ENTITY_INDEX, {
                 '$.id': {
                     type: SchemaFieldTypes.TEXT,
-                    //sortable: true,
                     AS: 'id'
                 },
-                '$.position.x': {
+                '$.position[0]': {
                     type: SchemaFieldTypes.NUMERIC,
                     AS: 'x'
                 },
-                '$.position.y': {
+                '$.position[1]': {
                     type: SchemaFieldTypes.NUMERIC,
                     AS: 'y'
                 },
@@ -120,7 +86,6 @@ class RedisDs extends RESTDataSource {
     async getEntityById(id) {
         const client = await this.client;
         const entityJson = await client.get(id);
-        console.log('getEntityById',id, entityJson)
         if (!entityJson) return {};
         return JSON.parse(entityJson);
     }
@@ -144,11 +109,7 @@ class RedisDs extends RESTDataSource {
             return accumulator.json.set(documentName, '$', entity);
         }, client.multi())
 
-        console.log('promises',promises)
         const results = await promises.exec();
-        console.log('upsertEntities results=', results)
-
-        //await client.json.set(documentName, '$', entity);
 
         return results.map((result) => result === 'OK');
     }
@@ -165,9 +126,7 @@ class RedisDs extends RESTDataSource {
             `@id:${id}`
         ); 
         if (!results) return [];
-        console.log('ft.search results', results)
         const { documents } = results;
-        console.log('documents',documents)
         const entities = documents.map((document) => {
             const { id: documentId, value: entity } = document;
             return entity;
@@ -181,7 +140,6 @@ class RedisDs extends RESTDataSource {
             ENTITY_INDEX,
             `@ownerId:${ownerId}`
         ); 
-        console.log('getEntityByOwnerId ownerId', ownerId, 'results', results)
         if (!results) return [];
         const { documents } = results;
         const entities = documents.map((document) => {
@@ -192,13 +150,13 @@ class RedisDs extends RESTDataSource {
     }
 
     async getEntityNearPosition(position, range) {
-        if (!position?.x || !position?.y) 
-            return [];
+        const [x, y] = position;
+        if (!position || x == null || y == null) return [];
     
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `@x:[${position.x - range} ${position.x + range}] @y:[${position.y - range} ${position.y + range}]`
+            `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}]`
         ); 
         if (!results) return [];
         const { documents } = results;
@@ -210,27 +168,20 @@ class RedisDs extends RESTDataSource {
     }
 
     async getEntitiesNearEntities({entities, ignoreId = null, defaultRange = 4}) {
-        //console.log('getEntitiesNearEntities startingup entities=', entities)
         if (!entities?.length) return [];
         const client = await this.client;
         const promises = entities.reduce((accumulator, entity) => {
-            const { position: { x, y }, sightRange } = entity;
+            const { position: [ x, y ], sightRange } = entity;
             const range = sightRange ? sightRange : defaultRange;
             return accumulator.ft.search(ENTITY_INDEX,
                 `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ignoreId}`)
         
         }, client.multi())
-        // console.log('  executing promises')
+        
         const results = await promises.exec();
-        //console.log('getEntitiesNearEntities', results)
+        
         const reducedResults = results.reduce((accumulator, result) => {
             const foundEntities = result.documents.map(doc => doc.value);
-            // console.log("   accumulator=", accumulator)
-            //console.log("      result.documents=", foundEntities)
-            
-            //return accumulator = [...accumulator, ...foundEntities];
-
-            //return union(accumulator, foundEntities);
             return uniqBy(accumulator.concat(foundEntities), 'id')
         },[] );
         
@@ -252,28 +203,6 @@ class RedisDs extends RESTDataSource {
         });
         return entities;
     }
-
-    // async getEntitiesICanSee(myId) {
-    //     const myEntities = await getEntitiesByOwnerId(myId);
-
-    //     const result = {
-    //         myEntities,
-    //         otherEntities: myEntities
-
-    //     }
-    //     const client = await this.client;
-    //     const results = await client.ft.search(
-    //         ENTITY_INDEX,
-    //         `*`
-    //     ); 
-    //     if (!results) return [];
-    //     const { documents } = results;
-    //     const entities = documents.map((document) => {
-    //         const { id: documentId, value: entity } = document;
-    //         return entity;
-    //     });
-    //     return entities;
-    // }
 }
 
 module.exports = RedisDs;

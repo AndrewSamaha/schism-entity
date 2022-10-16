@@ -16,17 +16,15 @@ const makeEntity = (args) => {
         longName: 'longName'+ randomBytes(8).toString('hex'),
         speed: Math.random() * 3,
         owner: 'player' + randomBytes(4).toString('hex'),
-        position: {
-            __typename: 'Position',
-            x: Math.random() * 20,
-            y: Math.random() * 20,
-            z: 0,
-        },
-        chunk: {
-            __typename: 'Chunk',
-            x: Math.floor(Math.random() * 20),
-            y: Math.floor(Math.random() * 20),
-        },
+        position: [
+            Math.random() * 20,
+            Math.random() * 20,
+        ],
+        // chunk: {    // I think this is deprecated bc we can index directly on position
+        //     __typename: 'Chunk',
+        //     x: Math.floor(Math.random() * 20),
+        //     y: Math.floor(Math.random() * 20),
+        // },
         color: 'blue',
         ...args
     }
@@ -112,6 +110,11 @@ module.exports = {
             const result = await redis.insertEntityJson(entity);
             console.log('insertEntity', result);
             return true;
+        },
+        upsertEntities: async (_, args, { dataSources }) => {
+            const { redis } = dataSources;
+            const { entities } = args;
+            return await redis.upsertEntities(entities);
         },
         upsertMyEntities: async (_, args, { dataSources, player }) => {
             if (!player?.id) return false;

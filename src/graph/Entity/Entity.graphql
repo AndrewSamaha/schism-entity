@@ -4,8 +4,9 @@ type Entity {
     longName: String
     speed: Float
     ownerId: String
-    position: Position
+    position: [Float]
     color: String
+    sightRange: Float
 }
 
 input EntityInput {
@@ -14,8 +15,9 @@ input EntityInput {
     longName: String
     speed: Float
     ownerId: String
-    position: PositionInput
+    position: [Float]
     color: String
+    sightRange: Float
 }
 
 type Mutation {
@@ -29,7 +31,7 @@ type Query {
     getEntityById(id: ID!): [Entity]!
     getEntitiesInChunk(chunk: ChunkInput!): [Entity]!
     getEntitiesByOwner(ownerId: ID!): [Entity]!
-    getEntitiesNearPosition(position: PositionInput!, range: Int): [Entity]!
+    getEntitiesNearPosition(position: [Float], range: Float): [Entity]!
     getAllEntities: [Entity]!
     getMyEntities: [Entity]!
     getEntitiesICanSee: [Entity]!
