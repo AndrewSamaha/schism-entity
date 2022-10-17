@@ -1,4 +1,4 @@
-const { randomBytes } = require('crypto');
+const { randomBytes, randomUUID } = require('crypto');
 const times = require('lodash/times');
 /*
 id: ID
@@ -121,6 +121,19 @@ module.exports = {
             const { redis } = dataSources;
             const { entities } = args;
             const myEntities = entities.filter((entity) => entity.ownerId === `player.${player.id}`)
+            return await redis.upsertEntities(myEntities);
+        },
+        myCreateNewEntities: async (_, args, { dataSources, player }) => {
+            if (!player?.id) return false;
+            const { id } = player;
+            const { redis } = dataSources;
+            const { entities } = args;
+            const myEntities = entities.map((entity) => ({
+                ...entity,
+                ownerId: `player.${id}`,
+                id: randomUUID()
+            }));
+            // console.log('sending these enties to upsert: ', myEntities)
             return await redis.upsertEntities(myEntities);
         }
     }

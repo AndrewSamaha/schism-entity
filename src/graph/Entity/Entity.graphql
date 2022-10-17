@@ -20,11 +20,21 @@ input EntityInput {
     sightRange: Float
 }
 
+input MyNewEntityInput {
+    name: String
+    longName: String
+    speed: Float
+    position: [Float]
+    color: String
+    sightRange: Float
+}
+
 type Mutation {
     updateEntity(entity: EntityInput!): Boolean
     insertEntity(entity: EntityInput!): Boolean
     upsertEntities(entities: [EntityInput]!): [Boolean]
     upsertMyEntities(entities: [EntityInput]!): [Boolean]
+    myCreateNewEntities(entities: [MyNewEntityInput]!): [Boolean]
 }
 
 type Query {

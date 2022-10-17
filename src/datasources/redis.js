@@ -1,5 +1,7 @@
 const { RESTDataSource } = require("apollo-datasource-rest");
 const { SchemaFieldTypes } = require("redis");
+const { uuid } = require("uuid");
+
 const uniqBy = require('lodash/uniqBy');
 const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
 const ENTITY_INDEX = 'entityIdx';
