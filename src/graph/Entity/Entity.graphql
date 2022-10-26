@@ -29,12 +29,38 @@ input MyNewEntityInput {
     sightRange: Float
 }
 
+input EntityChangeInput {
+    path: String!
+    value: String!
+}
+
+input EntityChangeLogInput {
+    time: Int
+    timeDelta: Int
+    change: [EntityChangeInput]!
+}
+
+input ActionDetailsInput {
+    longName: String!
+}
+input MyActionEffectInput {
+    id: ID!
+    startTime: String!
+    sourceEntityId: ID!
+    targetEntityId: ID!
+    sourceEntityJSON: String!
+    targetEntityJSON: String!
+    changeLog: [EntityChangeLogInput]!
+    actionDetails: ActionDetailsInput
+}
+
 type Mutation {
     updateEntity(entity: EntityInput!): Boolean
     insertEntity(entity: EntityInput!): Boolean
     upsertEntities(entities: [EntityInput]!): [Boolean]
     upsertMyEntities(entities: [EntityInput]!): [Boolean]
     myCreateNewEntities(entities: [MyNewEntityInput]!): [Boolean]
+    myActionEffect(aE: MyActionEffectInput): Boolean
 }
 
 type Query {

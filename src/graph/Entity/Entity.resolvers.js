@@ -135,6 +135,9 @@ module.exports = {
             }));
             // console.log('sending these enties to upsert: ', myEntities)
             return await redis.upsertEntities(myEntities);
+        },
+        myActionEffect: async (_, args, { dataSources, player }) => {
+            console.log('myActionEffect', args)
         }
     }
 }
