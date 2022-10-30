@@ -31,27 +31,28 @@ input MyNewEntityInput {
 
 input EntityChangeInput {
     path: String!
-    value: String!
+    value: String
 }
 
 input EntityChangeLogInput {
-    time: Int
-    timeDelta: Int
-    change: [EntityChangeInput]!
+    time: String
+    timeDelta: String
+    changes: [EntityChangeInput]!
 }
 
-input ActionDetailsInput {
+input ActionStringsInput {
     longName: String!
+    name: String
 }
 input MyActionEffectInput {
     id: ID!
     startTime: String!
     sourceEntityId: ID!
     targetEntityId: ID!
-    sourceEntityJSON: String!
-    targetEntityJSON: String!
+    sourceEntityJSON: String
+    targetEntityJSON: String
     changeLog: [EntityChangeLogInput]!
-    actionDetails: ActionDetailsInput
+    actionStrings: ActionStringsInput
 }
 
 type Mutation {

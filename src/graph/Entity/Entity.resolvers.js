@@ -1,5 +1,8 @@
+const { ForbiddenError } = require('apollo-server');
 const { randomBytes, randomUUID } = require('crypto');
 const times = require('lodash/times');
+const set = require('lodash/set');
+const last = require('lodash/last');
 /*
 id: ID
     name: String
@@ -29,6 +32,8 @@ const makeEntity = (args) => {
         ...args
     }
 }
+
+const ownerIdString = (id) => `player.${id}`;
 
 module.exports = {
     Query: {
@@ -133,11 +138,40 @@ module.exports = {
                 ownerId: `player.${id}`,
                 id: randomUUID()
             }));
-            // console.log('sending these enties to upsert: ', myEntities)
+
             return await redis.upsertEntities(myEntities);
         },
         myActionEffect: async (_, args, { dataSources, player }) => {
-            console.log('myActionEffect', args)
+            if (!player?.id) return false;
+            const { redis } = dataSources;
+            const { aE } = args;
+            const { 
+                sourceEntityId,
+                targetEntityId,
+                targetEntityJSON,
+                sourceEntityJSON
+            } = aE;
+            
+            const sourceEntity = JSON.parse(sourceEntityJSON);
+            const targetEntity = JSON.parse(targetEntityJSON);            
+            const playerId = ownerIdString(player.id);
+
+            if (playerId !== sourceEntity.ownerId && playerId !== targetEntity.ownerId) {
+                throw new ForbiddenError(`Request to mutate unrelated entity ${targetEntityId} by ${playerId}.`)
+            }
+            
+            const entityArray = await redis.getEntityByIdFtSearch(targetEntityId);
+
+            let entity = last(entityArray);
+        
+            aE.changeLog[0].changes.forEach((change) => {
+                if (change.path === 'tic') return;
+                set(entity, change.path, parseFloat(change.value))
+            })
+            
+            await redis.updateEntity(entity);
+        
+            return true;
         }
     }
 }

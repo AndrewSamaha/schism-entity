@@ -92,7 +92,7 @@ class RedisDs extends RESTDataSource {
         return JSON.parse(entityJson);
     }
 
-    async updateEntityJson(entity) {
+    async updateEntity(entity) {
         const { id } = entity;
         const client = await this.client;
 
@@ -101,6 +101,7 @@ class RedisDs extends RESTDataSource {
 
         return true;
     }
+
 
     async upsertEntities(entities) {
         const client = await this.client;
@@ -125,7 +126,7 @@ class RedisDs extends RESTDataSource {
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `@id:${id}`
+            `@id:${id.replace(/\-/g,'?')}`
         ); 
         if (!results) return [];
         const { documents } = results;
