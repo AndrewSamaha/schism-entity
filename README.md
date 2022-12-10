@@ -10,7 +10,30 @@ This service is responsible for maintaining and serving entity state stored in a
         $.position[1] AS y NUMERIC
         $.name AS name TEXT  
     ```
-
+- Search:  https://redis.io/commands/ft.search/
+    ```
+    FT.SEARCH entityIdx '@x:[0 50]'
+    ```
+    ```
+    FT.SEARCH entityIdx '@x:[0 50]' NOCONTENT LIMIT 00 50
+    ```
+- Search API:
+    ```
+    const ENTITY_INDEX = 'entityIdx';
+    const JSON_DOC_PREFIX = 'entity:';
+    const LIMIT = 1000;
+    const LIMITOBJ = {
+        LIMIT: {
+            from: 0,
+            size: LIMIT
+        }
+    };
+    const results = await client.ft.search(
+            ENTITY_INDEX,
+            `*`,
+            LIMITOBJ
+        ); 
+    ```
 # Local Development
 1. The redis-cli package in NPM currently doesn't support JSON indices. So, another packge is necessary.
 
