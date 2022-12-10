@@ -6,6 +6,14 @@ const uniqBy = require('lodash/uniqBy');
 const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
 const ENTITY_INDEX = 'entityIdx';
 const JSON_DOC_PREFIX = 'entity:';
+const LIMIT = 1000;
+const LIMITOBJ = {
+        LIMIT: {
+            from: 0,
+            size: LIMIT
+        }
+    };
+
 
 class RedisDs extends RESTDataSource {
     /// https://www.apollographql.com/docs/apollo-server/data/data-sources/
@@ -126,7 +134,8 @@ class RedisDs extends RESTDataSource {
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `@id:${id.replace(/\-/g,'?')}`
+            `@id:${id.replace(/\-/g,'?')}`,
+            { }
         ); 
         if (!results) return [];
         const { documents } = results;
@@ -141,7 +150,8 @@ class RedisDs extends RESTDataSource {
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `@ownerId:${ownerId}`
+            `@ownerId:${ownerId}`,
+            LIMITOBJ
         ); 
         if (!results) return [];
         const { documents } = results;
@@ -159,7 +169,8 @@ class RedisDs extends RESTDataSource {
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}]`
+            `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}]`,
+            LIMITOBJ
         ); 
         if (!results) return [];
         const { documents } = results;
@@ -177,7 +188,9 @@ class RedisDs extends RESTDataSource {
             const { position: [ x, y ], sightRange } = entity;
             const range = sightRange ? sightRange : defaultRange;
             return accumulator.ft.search(ENTITY_INDEX,
-                `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ignoreId}`)
+                `@x:[${x - range} ${x + range}] @y:[${y - range} ${y + range}] -@ownerId:${ignoreId}`,
+                    LIMITOBJ
+                )
         
         }, client.multi())
         
@@ -196,7 +209,8 @@ class RedisDs extends RESTDataSource {
         const client = await this.client;
         const results = await client.ft.search(
             ENTITY_INDEX,
-            `*`
+            `*`,
+            LIMITOBJ
         ); 
         if (!results) return [];
         const { documents } = results;

@@ -41,7 +41,6 @@ module.exports = {
             const { id } = args;
             const { redis } = dataSources;
             const entity = await redis.getEntityByIdFtSearch(id);
-            console.log('getEntityById resolver received: ', entity)
             return entity;
         },
         getEntitiesInChunk: async (_, args, { dataSources }) => {
@@ -74,17 +73,13 @@ module.exports = {
             return entities;
         },
         getEntitiesICanSee: async(_, __, { dataSources, player }) => {
-            //console.log('getEntitiesICanSee player',player)
             if (!player?.id) return [];
             const { redis } = dataSources;
-            //console.log('getEntitiesICanSee');
             const myEntities = await redis.getEntityByOwnerId(`player.${player.id}`);
-            //console.log('myEntities', myEntities);
             const otherEntities = await redis.getEntitiesNearEntities({ 
                 entities: myEntities,
                 ignoreId: player.id
             });
-            //console.log('otherEntities', otherEntities)
             const uniqueEntities = otherEntities.reduce((uniqueData, entity) => {
                 const { entities, entityIds } = uniqueData;
                 if (entities.includes(entity.id)) return uniqueData;
@@ -95,7 +90,6 @@ module.exports = {
                 entities: myEntities,
                 entityIds: myEntities.map(entity => entity.id)
             })
-            //console.log('uniqueEntities', uniqueEntities.entities)
             return uniqueEntities.entities;
         }
     },
@@ -103,17 +97,13 @@ module.exports = {
         updateEntity: async (_, args, { dataSources }) => {
             const { redis } = dataSources;
             const { entity } = args;
-            console.log('updateEntity received', entity);
             const result = await redis.updateEntityJson(entity);
-            console.log('updateEntity', result);
             return true;
         },
         insertEntity: async (_, args, { dataSources }) => {
             const { redis } = dataSources;
             const { entity } = args;
-            console.log('insertEntity received', entity);
             const result = await redis.insertEntityJson(entity);
-            console.log('insertEntity', result);
             return true;
         },
         upsertEntities: async (_, args, { dataSources }) => {
@@ -138,7 +128,6 @@ module.exports = {
                 ownerId: `player.${id}`,
                 id: randomUUID()
             }));
-
             return await redis.upsertEntities(myEntities);
         },
         myActionEffect: async (_, args, { dataSources, player }) => {
