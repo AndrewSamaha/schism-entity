@@ -135,7 +135,7 @@ class RedisDs extends RESTDataSource {
         const results = await client.ft.search(
             ENTITY_INDEX,
             `@id:${id.replace(/\-/g,'?')}`,
-            { }
+            LIMITOBJ
         ); 
         if (!results) return [];
         const { documents } = results;
