@@ -7,17 +7,22 @@ const { typeDefs, resolvers } = require('./src/graph/index');
 // db objects
 const { returnRedisConnection } = require('./src/db/redis/redis');
 
-// datasources
-const RedisDs = require('./src/datasources/redis');
+const redisConnection = returnRedisConnection();
 
-const redis = new RedisDs(returnRedisConnection());
+// datasources
+const EntityStateDS = require('./src/datasources/EntityStateDS');
+const entityStateDS = new EntityStateDS(redisConnection);
+
+const PlayerStateDS = require('./src/datasources/PlayerStateDS');
+const playerStateDS = new PlayerStateDS(redisConnection);
 
 const server = new ApolloServer({
     schema: buildSubgraphSchema({ typeDefs, resolvers }),
     context: createContext,
     dataSources: () => {
         return {
-            redis
+            entityStateDS,
+            playerStateDS
         }
     },
 });

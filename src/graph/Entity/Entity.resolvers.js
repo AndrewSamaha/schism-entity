@@ -39,8 +39,8 @@ module.exports = {
     Query: {
         getEntityById: async (_, args, { dataSources }) => {
             const { id } = args;
-            const { redis } = dataSources;
-            const entity = await redis.getEntityByIdFtSearch(id);
+            const { entityStateDS } = dataSources;
+            const entity = await entityStateDS.getEntityByIdFtSearch(id);
             return entity;
         },
         getEntitiesInChunk: async (_, args, { dataSources }) => {
@@ -50,33 +50,33 @@ module.exports = {
         },
         getEntitiesByOwner: async (_, args, { dataSources }) => {
             const { ownerId } = args;
-            const { redis } = dataSources;
-            const entities = await redis.getEntityByOwnerId(ownerId);
+            const { entityStateDS } = dataSources;
+            const entities = await entityStateDS.getEntityByOwnerId(ownerId);
             return entities;
         },
         getEntitiesNearPosition: async (_, args, { dataSources }) => {
             const { position, range } = args;
-            const { redis } = dataSources;
-            const entities = await redis.getEntityNearPosition(position, range);
+            const { entityStateDS } = dataSources;
+            const entities = await entityStateDS.getEntityNearPosition(position, range);
             return entities;
         },
         getAllEntities: async (_, __, { dataSources }) => {
-            const { redis } = dataSources;
-            const entities = await redis.getAllEntities();
+            const { entityStateDS } = dataSources;
+            const entities = await entityStateDS.getAllEntities();
             return entities;
         },
         getMyEntities: async (_, args, { dataSources, player }) => {
             if (!player?.id) return [];
             const { id } = player;
-            const { redis } = dataSources;
-            const entities = await redis.getEntityByOwnerId(`player.${id}`);
+            const { entityStateDS } = dataSources;
+            const entities = await entityStateDS.getEntityByOwnerId(`player.${id}`);
             return entities;
         },
         getEntitiesICanSee: async(_, __, { dataSources, player }) => {
             if (!player?.id) return [];
-            const { redis } = dataSources;
-            const myEntities = await redis.getEntityByOwnerId(`player.${player.id}`);
-            const otherEntities = await redis.getEntitiesNearEntities({ 
+            const { entityStateDS } = dataSources;
+            const myEntities = await entityStateDS.getEntityByOwnerId(`player.${player.id}`);
+            const otherEntities = await entityStateDS.getEntitiesNearEntities({ 
                 entities: myEntities,
                 ignoreId: player.id
             });
@@ -95,44 +95,44 @@ module.exports = {
     },
     Mutation: {
         updateEntity: async (_, args, { dataSources }) => {
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { entity } = args;
-            const result = await redis.updateEntityJson(entity);
+            const result = await entityStateDS.updateEntityJson(entity);
             return true;
         },
         insertEntity: async (_, args, { dataSources }) => {
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { entity } = args;
-            const result = await redis.insertEntityJson(entity);
+            const result = await entityStateDS.insertEntityJson(entity);
             return true;
         },
         upsertEntities: async (_, args, { dataSources }) => {
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { entities } = args;
-            return await redis.upsertEntities(entities);
+            return await entityStateDS.upsertEntities(entities);
         },
         upsertMyEntities: async (_, args, { dataSources, player }) => {
             if (!player?.id) return false;
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { entities } = args;
             const myEntities = entities.filter((entity) => entity.ownerId === `player.${player.id}`)
-            return await redis.upsertEntities(myEntities);
+            return await entityStateDS.upsertEntities(myEntities);
         },
         myCreateNewEntities: async (_, args, { dataSources, player }) => {
             if (!player?.id) return false;
             const { id } = player;
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { entities } = args;
             const myEntities = entities.map((entity) => ({
                 ...entity,
                 ownerId: `player.${id}`,
                 id: randomUUID()
             }));
-            return await redis.upsertEntities(myEntities);
+            return await entityStateDS.upsertEntities(myEntities);
         },
         myActionEffect: async (_, args, { dataSources, player }) => {
             if (!player?.id) return false;
-            const { redis } = dataSources;
+            const { entityStateDS } = dataSources;
             const { aE } = args;
             const { 
                 sourceEntityId,
@@ -149,7 +149,7 @@ module.exports = {
                 throw new ForbiddenError(`Request to mutate unrelated entity ${targetEntityId} by ${playerId}.`)
             }
             
-            const entityArray = await redis.getEntityByIdFtSearch(targetEntityId);
+            const entityArray = await entityStateDS.getEntityByIdFtSearch(targetEntityId);
 
             let entity = last(entityArray);
         
@@ -158,7 +158,7 @@ module.exports = {
                 set(entity, change.path, parseFloat(change.value))
             })
             
-            await redis.updateEntity(entity);
+            await entityStateDS.updateEntity(entity);
         
             return true;
         }

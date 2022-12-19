@@ -1,21 +1,11 @@
 const { RESTDataSource } = require("apollo-datasource-rest");
 const { SchemaFieldTypes } = require("redis");
 const { uuid } = require("uuid");
-
 const uniqBy = require('lodash/uniqBy');
-const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
-const ENTITY_INDEX = 'entityIdx';
-const JSON_DOC_PREFIX = 'entity:';
-const LIMIT = 1000;
-const LIMITOBJ = {
-        LIMIT: {
-            from: 0,
-            size: LIMIT
-        }
-    };
 
+const { PLAYER_JWT_SECRET_KEY, ENTITY_INDEX, JSON_DOC_ENTITY_PREFIX, LIMITOBJ } = require('../constants/redis');
 
-class RedisDs extends RESTDataSource {
+class EntityStateDS extends RESTDataSource {
     /// https://www.apollographql.com/docs/apollo-server/data/data-sources/
     constructor(client) {
         super();
@@ -64,7 +54,7 @@ class RedisDs extends RESTDataSource {
                 }
             }, {
                 ON: 'JSON',
-                PREFIX: JSON_DOC_PREFIX  
+                PREFIX: JSON_DOC_ENTITY_PREFIX  
             });
             console.log('createEntityIndex already exists');
         } catch (e) {
@@ -135,7 +125,7 @@ class RedisDs extends RESTDataSource {
         const results = await client.ft.search(
             ENTITY_INDEX,
             `@id:${id.replace(/\-/g,'?')}`,
-            { }
+            LIMITOBJ
         ); 
         if (!results) return [];
         const { documents } = results;
@@ -222,4 +212,4 @@ class RedisDs extends RESTDataSource {
     }
 }
 
-module.exports = RedisDs;
+module.exports = EntityStateDS;
