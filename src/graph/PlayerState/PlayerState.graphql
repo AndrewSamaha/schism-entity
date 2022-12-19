@@ -1,0 +1,33 @@
+type ResourceState {
+    gold: Int
+    wood: Int
+    stone: Int
+    food: Int
+}
+
+type PlayerState {
+    id: ID
+    name: String    
+    position: [Float]
+    resourceState: ResourceState
+}
+
+input ResourceStateInput {
+    gold: Int
+    wood: Int
+    stone: Int
+    food: Int
+}
+
+input PlayerStateInput {
+    id: ID
+    name: String    
+    position: [Float]
+    resourceState: ResourceStateInput
+}
+
+type Query {
+    updatePlayerState(player: PlayerStateInput!): Boolean!
+    getPlayerState(id: ID): PlayerState
+    getAllPlayerStates: [PlayerState]
+}
