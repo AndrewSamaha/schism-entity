@@ -8,16 +8,16 @@ const { typeDefs, resolvers } = require('./src/graph/index');
 const { returnRedisConnection } = require('./src/db/redis/redis');
 
 // datasources
-const RedisDs = require('./src/datasources/redis');
+const EntityStateDS = require('./src/datasources/EntityStateDS');
 
-const redis = new RedisDs(returnRedisConnection());
+const entityStateDS = new EntityStateDS(returnRedisConnection());
 
 const server = new ApolloServer({
     schema: buildSubgraphSchema({ typeDefs, resolvers }),
     context: createContext,
     dataSources: () => {
         return {
-            redis
+            entityStateDS
         }
     },
 });

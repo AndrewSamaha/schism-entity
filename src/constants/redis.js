@@ -1,6 +1,6 @@
 const PLAYER_JWT_SECRET_KEY = 'playerJwtSecret';
 const ENTITY_INDEX = 'entityIdx';
-const JSON_DOC_PREFIX = 'entity:';
+const JSON_DOC_ENTITY_PREFIX = 'entity:';
 const LIMIT = 1000;
 const LIMITOBJ = {
         LIMIT: {
@@ -12,6 +12,6 @@ const LIMITOBJ = {
 module.exports = {
     PLAYER_JWT_SECRET_KEY,
     ENTITY_INDEX,
-    JSON_DOC_PREFIX,
+    JSON_DOC_ENTITY_PREFIX,
     LIMITOBJ
 }

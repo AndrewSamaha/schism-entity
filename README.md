@@ -20,7 +20,7 @@ This service is responsible for maintaining and serving entity state stored in a
 - Search API:
     ```
     const ENTITY_INDEX = 'entityIdx';
-    const JSON_DOC_PREFIX = 'entity:';
+    const JSON_DOC_ENTITY_PREFIX = 'entity:';
     const LIMIT = 1000;
     const LIMITOBJ = {
         LIMIT: {

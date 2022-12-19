@@ -3,9 +3,9 @@ const { SchemaFieldTypes } = require("redis");
 const { uuid } = require("uuid");
 const uniqBy = require('lodash/uniqBy');
 
-const { PLAYER_JWT_SECRET_KEY, ENTITY_INDEX, JSON_DOC_PREFIX, LIMITOBJ } = require('../constants/redis');
+const { PLAYER_JWT_SECRET_KEY, ENTITY_INDEX, JSON_DOC_ENTITY_PREFIX, LIMITOBJ } = require('../constants/redis');
 
-class RedisDs extends RESTDataSource {
+class EntityStateDS extends RESTDataSource {
     /// https://www.apollographql.com/docs/apollo-server/data/data-sources/
     constructor(client) {
         super();
@@ -54,7 +54,7 @@ class RedisDs extends RESTDataSource {
                 }
             }, {
                 ON: 'JSON',
-                PREFIX: JSON_DOC_PREFIX  
+                PREFIX: JSON_DOC_ENTITY_PREFIX  
             });
             console.log('createEntityIndex already exists');
         } catch (e) {
@@ -212,4 +212,4 @@ class RedisDs extends RESTDataSource {
     }
 }
 
-module.exports = RedisDs;
+module.exports = EntityStateDS;
