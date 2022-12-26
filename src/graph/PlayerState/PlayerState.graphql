@@ -31,3 +31,9 @@ type Query {
     getPlayerState(id: ID): PlayerState
     getAllPlayerStates: [PlayerState]
 }
+
+type Mutation {
+    updateMyPosition(position: [Float]): Boolean
+    incrementResource(playerId: ID, resource: String, amount: Int): Boolean
+    incrementMyResource(resource: String, amount: Int): Boolean
+}
