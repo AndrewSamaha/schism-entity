@@ -2,6 +2,8 @@ const { RESTDataSource } = require("apollo-datasource-rest");
 
 const { PLAYER_STATE_INDEX, PLAYER_STATE_INDEX_SHAPE, JSON_DOC_PLAYERSTATE_PREFIX, LIMITOBJ } = require('../constants/redis');
 
+const getDocName = (playerId) => `${JSON_DOC_PLAYERSTATE_PREFIX}${String(playerId).replace(/^(player)+([\.\:])+/,'')}`;
+
 class PlayerStateDS extends RESTDataSource {
     /// https://www.apollographql.com/docs/apollo-server/data/data-sources/
     constructor(client) {
@@ -54,31 +56,19 @@ class PlayerStateDS extends RESTDataSource {
     async updatePlayerState(player) {
         const { id } = player;
         const client = await this.client;
-
-        const documentName = `${JSON_DOC_PLAYERSTATE_PREFIX}${id}`;
-        await client.json.set(documentName, '$', player);
-
+        await client.json.set(getDocName(id), '$', player);
         return true;
+    }
+
+    async incrementResource(playerId, resource, amount) {
+        const client = await this.client;
+        return await client.json.numIncrBy(getDocName(playerId), `resourceState.${resource}`, amount)
     }
 
     async getPlayerState(id) {
         const client = await this.client;
-        console.log('playerStateDS id=',id)
-        const documentName = `${JSON_DOC_PLAYERSTATE_PREFIX}${id}`;
-        console.log('documentName',documentName)
-        const player = await client.json.get(documentName);
-        console.log('player',player)
-        if (!player) return {
-            id: '0',
-            name: 'noPlayer',
-            position: [0,0],
-            resourceState: {
-                gold: 0,
-                wood: 0,
-                stone: 0,
-                food: 0
-            }
-        }
+        const player = await client.json.get(getDocName(id));
+        if (!player) return null;
         
         return player;
     }
